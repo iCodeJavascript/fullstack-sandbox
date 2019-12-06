@@ -1,5 +1,6 @@
 # Frontend
 frontend/node_modules
+/.idea
 
 # Backend
 backend/node_modules

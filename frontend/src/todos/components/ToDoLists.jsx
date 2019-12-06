@@ -8,66 +8,107 @@ import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ReceiptIcon from '@material-ui/icons/Receipt'
 import Typography from '@material-ui/core/Typography'
 import { ToDoListForm } from './ToDoListForm'
+import DoneIcon from '@material-ui/icons/Done';
+import { getTodoListsRequest, updateTodoListRequest } from '../../api';
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-const getPersonalTodos = () => {
-  return sleep(1000).then(() => Promise.resolve({
-    '0000000001': {
-      id: '0000000001',
-      title: 'First List',
-      todos: ['First todo of first list!']
-    },
-    '0000000002': {
-      id: '0000000002',
-      title: 'Second List',
-      todos: ['First todo of second list!']
-    }
-  }))
+const ErrorMessage = ({error}) => {
+    return (<div>{JSON.stringify(error, Object.getOwnPropertyNames(error))}</div>)
 }
-
 export const ToDoLists = ({ style }) => {
-  const [toDoLists, setToDoLists] = useState({})
-  const [activeList, setActiveList] = useState()
 
-  useEffect(() => {
-    getPersonalTodos()
-      .then(setToDoLists)
-  }, [])
+    const [error, setError] = useState({})
+    const [toDoLists, setToDoLists] = useState({})
+    const [activeList, setActiveList] = useState()
 
-  if (!Object.keys(toDoLists).length) return null
-  return <Fragment>
-    <Card style={style}>
-      <CardContent>
-        <Typography
-          component='h2'
-        >
-          My ToDo Lists
-        </Typography>
-        <List>
-          {Object.keys(toDoLists).map((key) => <ListItem
-            key={key}
-            button
-            onClick={() => setActiveList(key)}
-          >
-            <ListItemIcon>
-              <ReceiptIcon />
-            </ListItemIcon>
-            <ListItemText primary={toDoLists[key].title} />
-          </ListItem>)}
-        </List>
-      </CardContent>
-    </Card>
-    {toDoLists[activeList] && <ToDoListForm
-      key={activeList} // use key to make React recreate component to reset internal state
-      toDoList={toDoLists[activeList]}
-      saveToDoList={(id, { todos }) => {
+    const checkIfListIsCompleted = (toDoList) => {
+        const todos = toDoList.todos;
+        if (!todos) return
+        const allCompletedTodos = todos.filter((todo) => todo.completed === true);
+        const isListCompleted = allCompletedTodos.length === todos.length && todos.length > 0 ? true : false;
+        return isListCompleted;
+    }
+
+    const addTextToTodo = (id, todos) => {
         const listToUpdate = toDoLists[id]
-        setToDoLists({
-          ...toDoLists,
-          [id]: { ...listToUpdate, todos }
+        const updatedList = {...listToUpdate, todos}
+        const updatedToDoList = toDoLists.map((list) => {
+            if (list.id === id) {
+                return updatedList
+            }
+            return list
         })
-      }}
-    />}
-  </Fragment>
+        setToDoLists(updatedToDoList);
+    }
+
+    const addTodo = (id, todos) => {
+        const listToUpdate = toDoLists[id];
+        const updateTodoListDto = {...listToUpdate, todos};
+        updateTodoListRequest(id, updateTodoListDto).then((json) => {
+            setToDoLists(json);
+        })
+    }
+
+    const saveTodoList = (id, todos) => {
+        const listToUpdate = toDoLists[id]
+        const updateTodoListDto = {...listToUpdate, todos}
+        updateTodoListRequest(id, updateTodoListDto).then((json) => {
+            setToDoLists(json);
+        })
+    }
+
+    const deleteTodo = (id, index, todos) => {
+        const listToUpdate = toDoLists[id]
+        const updateTodoListDto = {...listToUpdate, todos}
+        updateTodoListRequest(id, updateTodoListDto).then((json) => {
+                setToDoLists(json);
+            })
+            .catch((error) => {
+                setError(error)
+            })
+    }
+
+    useEffect(() => {
+        getTodoListsRequest()
+            .then((json) => {
+                setToDoLists(json);
+            })
+            .catch((error) => {
+                setError(error)
+            })
+    }, [])
+
+    if (!Object.keys(toDoLists).length) return <ErrorMessage error={error}/>
+    return (<Fragment>
+        <Card style={style}>
+            <CardContent>
+                <Typography
+                    component='h2'
+                >
+                    My ToDo Lists
+                </Typography>
+                <List>
+                    {Object.keys(toDoLists).map((key) => <ListItem
+                        key={key}
+                        button
+                        onClick={() => setActiveList(key)}
+                    >
+                        <ListItemIcon>
+                            <ReceiptIcon />
+                        </ListItemIcon>
+                        <ListItemText primary={toDoLists[key].title}/>
+                        {checkIfListIsCompleted(toDoLists[key]) ? <DoneIcon /> : ''}
+                    </ListItem>)}
+                </List>
+            </CardContent>
+        </Card>
+        {toDoLists[activeList] && <ToDoListForm
+            key={activeList} // use key to make React recreate component to reset internal state
+            todos={toDoLists[activeList].todos}
+            toDoList={toDoLists[activeList]}
+            saveToDoList={saveTodoList}
+            deleteTodo={deleteTodo}
+            addTextToTodo={addTextToTodo}
+            addTodo={addTodo}
+        />}
+    </Fragment>)
 }
