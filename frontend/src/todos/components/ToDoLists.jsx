@@ -40,31 +40,14 @@ export const ToDoLists = ({ style }) => {
         setToDoLists(updatedToDoList);
     }
 
-    const addTodo = (id, todos) => {
-        const listToUpdate = toDoLists[id];
-        const updateTodoListDto = {...listToUpdate, todos};
-        updateTodoListRequest(id, updateTodoListDto).then((json) => {
-            setToDoLists(json);
-        })
-    }
-
     const saveTodoList = (id, todos) => {
         const listToUpdate = toDoLists[id]
         const updateTodoListDto = {...listToUpdate, todos}
         updateTodoListRequest(id, updateTodoListDto).then((json) => {
             setToDoLists(json);
+        }).catch((error) => {
+            setError(error)
         })
-    }
-
-    const deleteTodo = (id, index, todos) => {
-        const listToUpdate = toDoLists[id]
-        const updateTodoListDto = {...listToUpdate, todos}
-        updateTodoListRequest(id, updateTodoListDto).then((json) => {
-                setToDoLists(json);
-            })
-            .catch((error) => {
-                setError(error)
-            })
     }
 
     useEffect(() => {
@@ -106,9 +89,7 @@ export const ToDoLists = ({ style }) => {
             todos={toDoLists[activeList].todos}
             toDoList={toDoLists[activeList]}
             saveToDoList={saveTodoList}
-            deleteTodo={deleteTodo}
             addTextToTodo={addTextToTodo}
-            addTodo={addTodo}
         />}
     </Fragment>)
 }

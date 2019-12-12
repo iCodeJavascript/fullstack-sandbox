@@ -31,7 +31,7 @@ const useStyles = makeStyles({
     }
 })
 
-export const ToDoListForm = ({ toDoList, saveToDoList, deleteTodo, addTodo, addTextToTodo, todos }) => {
+export const ToDoListForm = ({ toDoList, saveToDoList, addTextToTodo, todos }) => {
 
     const classes = useStyles()
 
@@ -49,7 +49,7 @@ export const ToDoListForm = ({ toDoList, saveToDoList, deleteTodo, addTodo, addT
             ...todos,
             {name: '', completed: false}
         ]);
-        addTodo(toDoList.id, addTodoObj)
+        saveToDoList(toDoList.id, addTodoObj)
     }
 
     const handleSubmit = (e) => {
@@ -62,7 +62,7 @@ export const ToDoListForm = ({ toDoList, saveToDoList, deleteTodo, addTodo, addT
             ...todos.slice(0, index),
             ...todos.slice(index + 1)
         ]);
-        deleteTodo(toDoList.id, index, deleteTodoObj)
+        saveToDoList(toDoList.id, deleteTodoObj)
     }
 
     const handleCheck = index => {
